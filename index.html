@@ -1764,10 +1764,6 @@ async function loadData(){
     buildCharts();
     ['media','prod','checkmedia','checkpm'].forEach(t=>applyFilters(t));
 
-    const mt=S.media.data.length, pt=S.prod.data.length;
-    document.getElementById('bdg-media').textContent=mt.toLocaleString();
-    document.getElementById('bdg-prod').textContent=pt.toLocaleString();
-
     // โหลด Lists ที่เหลือ
     setStatus('','⏳ โหลด Lists...');
     const [listT] = await Promise.all([
@@ -1786,10 +1782,6 @@ async function loadData(){
     // เพราะ Check sheet เป็น filter sheet แสดงแค่คนที่เลือกไว้ใน B1
     fillDrop('f-cm-p', mNames);   // Media names จาก Media sheet
     fillDrop('f-cp-p', pNames);   // PM names จาก Production sheet
-
-    const mt=S.media.data.length, pt=S.prod.data.length;
-    document.getElementById('bdg-media').textContent=mt.toLocaleString();
-    document.getElementById('bdg-prod').textContent=pt.toLocaleString();
 
     // rebuild dropdown หลัง lists โหลดเสร็จ
     const now=new Date().toLocaleString('th-TH',{timeZone:'Asia/Bangkok',hour:'2-digit',minute:'2-digit',second:'2-digit'});
