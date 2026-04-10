@@ -2169,7 +2169,7 @@ function buildCheckData() {
   // Check-Media = Media sheet filtered by Media name
   S.checkmedia.data = S.media.data.map(r => ({
     'STATUS':           r['Status'] || '',
-    'Memo':             (()=>{ const firstKey=Object.keys(r).find(k=>k.trim().endsWith('Memo')); const firstVal=(firstKey?r[firstKey]:'').trim(); if(firstVal) return firstVal; const ck=(r['CREDIT_KEY']||'').trim(); if(ck) return ck.includes('§')?ck.split('§')[1].trim():ck; return ''; })() || '',
+    'Memo':             (r[Object.keys(r)[0]]||'').trim(),
     'PR. No.':          r['PR. No.'] || '',
     'PO Number':        r['PO Number'] || '',
     'Job No.':          r['Job No.'] || '',
@@ -2189,7 +2189,7 @@ function buildCheckData() {
   // Check-PM = Production sheet filtered by PM name
   S.checkpm.data = S.prod.data.map(r => ({
     'STATUS':           r['Status Invoice'] || '',
-    'Memo':             (()=>{ const firstKey=Object.keys(r).find(k=>k.trim().endsWith('Memo')); const firstVal=(firstKey?r[firstKey]:'').trim(); if(firstVal) return firstVal; const ck=(r['CREDIT_KEY']||'').trim(); if(ck) return ck.includes('§')?ck.split('§')[1].trim():ck; return ''; })() || '',
+    'Memo':             (r[Object.keys(r)[0]]||'').trim(),
     'PR. No.':          r['PR. No.'] || '',
     'PO Number':        r['PO Number'] || '',
     'Job No.':          r['Job No.'] || '',
