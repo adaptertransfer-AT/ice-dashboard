@@ -1524,6 +1524,11 @@ tbody td { padding:9px 13px; max-width:200px; overflow:hidden; text-overflow:ell
   height: 600px;
   border: none;
 }
+
+.doc-card-active {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 2px var(--brand-glow), var(--shadow-md) !important;
+}
 </style>
 </head>
 <body>
@@ -3568,7 +3573,7 @@ function renderDocCards(rows) {
     return;
   }
 
-  grid.innerHTML = rows.map(r => {
+  grid.innerHTML = rows.map((r, i) => {
     const name  = r['ชื่อเอกสาร'] || '—';
     const type  = (r['ประเภท'] || '').toUpperCase().trim();
     const cat   = r['หมวดหมู่'] || 'อื่นๆ';
@@ -3576,46 +3581,66 @@ function renderDocCards(rows) {
     const link  = r['Link'] || '';
     const note  = r['หมายเหตุ'] || '';
 
-    // icon และ class ตามประเภทไฟล์
     let icon = '📄', typeCls = 'doc-type-other';
     if (type === 'PDF')  { icon = '📕'; typeCls = 'doc-type-pdf'; }
     else if (type === 'PPT' || type === 'PPTX') { icon = '📊'; typeCls = 'doc-type-ppt'; }
     else if (type === 'SHEET' || type === 'GOOGLE SHEET') { icon = '📗'; typeCls = 'doc-type-sheet'; }
     else if (type === 'JPG' || type === 'PNG' || type === 'IMG') { icon = '🖼️'; typeCls = 'doc-type-img'; }
 
-    // แปลง Google Drive link เป็น embed link
-    const embedLink = link.replace('/view', '/preview').replace('/edit', '/preview');
-    const canEmbed  = link.includes('drive.google.com') || link.includes('docs.google.com');
+    // แปลง link เป็น embed
+    const fileId = (link.match(/\/file\/d\/([^/]+)/) || link.match(/id=([^&]+)/) || [])[1] || '';
+    const embedLink = fileId
+      ? `https://drive.google.com/file/d/${fileId}/preview`
+      : link.replace('/view', '/preview').replace('/edit', '/preview');
+    const canEmbed = !!(fileId || link.includes('docs.google.com'));
 
-    return `<div class="doc-card" onclick="openDoc('${encodeURIComponent(name)}','${encodeURIComponent(embedLink)}','${encodeURIComponent(link)}',${canEmbed})">
+    return `<div class="doc-card ${i===0?'doc-card-active':''}" id="doc-card-${i}" onclick="openDoc(${i},'${encodeURIComponent(name)}','${encodeURIComponent(embedLink)}','${encodeURIComponent(link)}',${canEmbed})">
       <div class="doc-card-top">
         <div class="doc-type-icon ${typeCls}">${icon}</div>
-        <div class="doc-name">${name}</div>
-      </div>
-      <div class="doc-meta">
-        <span class="doc-cat">${cat}</span>
-        <span class="doc-date">${date}</span>
+        <div>
+          <div class="doc-name">${name}</div>
+          <div class="doc-meta" style="margin-top:4px">
+            <span class="doc-cat">${cat}</span>
+            <span class="doc-date">${date}</span>
+          </div>
+        </div>
       </div>
       ${note ? `<div class="doc-note">📎 ${note}</div>` : ''}
-      <div class="doc-open-btn">🔗 คลิกเพื่อเปิด</div>
+      <div class="doc-open-btn">👁️ ดูเอกสาร</div>
     </div>`;
   }).join('');
+
+  // แสดง PDF ไฟล์แรกอัตโนมัติ
+  if (rows.length > 0) {
+    const first = rows[0];
+    const link  = first['Link'] || '';
+    const fileId = (link.match(/\/file\/d\/([^/]+)/) || link.match(/id=([^&]+)/) || [])[1] || '';
+    const embed  = fileId ? `https://drive.google.com/file/d/${fileId}/preview` : link.replace('/view','/preview');
+    if (fileId || link.includes('docs.google.com')) {
+      document.getElementById('docs-viewer-title').textContent = first['ชื่อเอกสาร'] || '—';
+      document.getElementById('docs-viewer-iframe').src = embed;
+      document.getElementById('docs-viewer-wrap').style.display = 'block';
+    }
+  }
 }
 
-function openDoc(nameEnc, embedEnc, linkEnc, canEmbed) {
+function openDoc(idx, nameEnc, embedEnc, linkEnc, canEmbed) {
   const name  = decodeURIComponent(nameEnc);
   const embed = decodeURIComponent(embedEnc);
   const link  = decodeURIComponent(linkEnc);
 
+  // highlight card ที่เลือก
+  document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('doc-card-active'));
+  const card = document.getElementById('doc-card-' + idx);
+  if (card) card.classList.add('doc-card-active');
+
   if (canEmbed) {
-    // แสดง PDF/Sheet ใน iframe
     document.getElementById('docs-viewer-title').textContent = name;
     document.getElementById('docs-viewer-iframe').src = embed;
     const viewer = document.getElementById('docs-viewer-wrap');
     viewer.style.display = 'block';
     viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } else {
-    // เปิด tab ใหม่สำหรับไฟล์ประเภทอื่น
     window.open(link, '_blank');
   }
 }
